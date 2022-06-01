@@ -24,11 +24,13 @@ type MemberRoles struct {
 }
 
 func init() {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
+		o.Region = "eu-west-2"
+		return nil
+	})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
 	client = dynamodb.NewFromConfig(cfg)
 }
 
@@ -79,7 +81,7 @@ func saveMemberRolesToCache(memberRoles MemberRoles) error {
 		Item:      item,
 	}
 
-	client.PutItem(context.TODO(), &params)
+	_, err = client.PutItem(context.TODO(), &params)
 
 	if err != nil {
 		log.Println("Error putting item,", err)
