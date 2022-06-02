@@ -139,23 +139,26 @@ func handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 func reminder(s *discordgo.Session, m *discordgo.MessageCreate, period string, content []string) {
 	waitSeconds := 0
 	temp := 0
+
+	unitToSeconds := map[rune]int{
+		's': 1,
+		'm': 60,
+		'h': 60 * 60,
+		'd': 60 * 60 * 24,
+	}
+
 	for _, c := range period {
-		switch c {
-		case 's':
-			waitSeconds += temp
-			temp = 0
-		case 'm':
-			waitSeconds += temp * 60
-			temp = 0
-		case 'h':
-			waitSeconds += temp * 60 * 60
-			temp = 0
-		case 'd':
-			waitSeconds += temp * 60 * 60 * 24
-			temp = 0
-		default:
+		if '0' <= c && c <= '9' {
 			temp = temp * 10
 			temp += int(c - '0')
+		} else {
+			secondsFactor, ok := unitToSeconds[c]
+			if !ok {
+				log.Println("Invalid time period, reminder will not be created")
+				return
+			}
+			waitSeconds += temp * secondsFactor
+			temp = 0
 		}
 	}
 
